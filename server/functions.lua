@@ -3,6 +3,53 @@ QBCore.Player_Buckets = {}
 QBCore.Entity_Buckets = {}
 QBCore.UsableItems = {}
 
+--- Builds a proxy object for the player
+--- @param player table The player object to build the proxy for
+--- @return table A proxy object for the player
+function QBCore.Functions.BuildPlayerProxy(player)
+    if not player then return nil end
+
+    local functions = {
+        UpdatePlayerData = function(...) return player:UpdatePlayerData(...) end,
+        SetJob = function(...) return player:SetJob(...) end,
+        SetGang = function(...) return player:SetGang(...) end,
+        SetJobDuty = function(...) return player:SetJobDuty(...) end,
+        SetPlayerData = function(...) return player:SetPlayerData(...) end,
+        SetMetaData = function(...) return player:SetMetaData(...) end,
+        GetMetaData = function(...) return player:GetMetaData(...) end,
+        AddRep = function(...) return player:AddRep(...) end,
+        RemoveRep = function(...) return player:RemoveRep(...) end,
+        GetRep = function(...) return player:GetRep(...) end,
+        AddMoney = function(...) return player:AddMoney(...) end,
+        RemoveMoney = function(...) return player:RemoveMoney(...) end,
+        SetMoney = function(...) return player:SetMoney(...) end,
+        GetMoney = function(...) return player:GetMoney(...) end,
+        Notify = function(...) return player:Notify(...) end,
+        HasItem = function(...) return player:HasItem(...) end,
+        GetName = function(...) return player:GetName(...) end,
+        Save = function(...) return player:Save(...) end,
+        Logout = function(...) return player:Logout(...) end,
+        AddMethod = function(...) return player:AddMethod(...) end,
+        AddField = function(...) return player:AddField(...) end,
+    }
+
+    local result = {
+        PlayerData = player.PlayerData,
+        Offline = player.Offline,
+        Functions = functions
+    }
+
+    for name, fn in pairs(player:GetAllExtraMethods()) do
+        functions[name] = function(...) return fn(player, ...) end
+    end
+
+    for name, value in pairs(player:GetAllExtraFields()) do
+        result[name] = value
+    end
+
+    return result
+end
+
 -- Getters
 -- Get your player first and then trigger a function on them
 -- ex: local player = QBCore.Functions.GetPlayer(source)
@@ -40,15 +87,12 @@ function QBCore.Functions.GetSource(identifier)
     return 0
 end
 
----Get player with given server id (source)
----@param source any
----@return table
+--- Get player by source
+--- @param source any
+--- @return table? A proxy object for the player, containing their PlayerData, Offline status
 function QBCore.Functions.GetPlayer(source)
-    if tonumber(source) ~= nil then -- If a number is a string ("1"), this will still correctly identify the index to use.
-        return QBCore.Players[tonumber(source)]
-    else
-        return QBCore.Players[QBCore.Functions.GetSource(source)]
-    end
+    local player = tonumber(source) ~= nil and QBCore.Players[tonumber(source)] or QBCore.Players[QBCore.Functions.GetSource(source)]
+    return QBCore.Functions.BuildPlayerProxy(player)
 end
 
 ---Get player by citizen id
@@ -57,7 +101,7 @@ end
 function QBCore.Functions.GetPlayerByCitizenId(citizenid)
     for src in pairs(QBCore.Players) do
         if QBCore.Players[src].PlayerData.citizenid == citizenid then
-            return QBCore.Players[src]
+            return QBCore.Functions.BuildPlayerProxy(QBCore.Players[src])
         end
     end
     return nil
@@ -83,7 +127,7 @@ end
 function QBCore.Functions.GetPlayerByPhone(number)
     for src in pairs(QBCore.Players) do
         if QBCore.Players[src].PlayerData.charinfo.phone == number then
-            return QBCore.Players[src]
+            return QBCore.Functions.BuildPlayerProxy(QBCore.Players[src])
         end
     end
     return nil
@@ -95,7 +139,7 @@ end
 function QBCore.Functions.GetPlayerByAccount(account)
     for src in pairs(QBCore.Players) do
         if QBCore.Players[src].PlayerData.charinfo.account == account then
-            return QBCore.Players[src]
+            return QBCore.Functions.BuildPlayerProxy(QBCore.Players[src])
         end
     end
     return nil
@@ -109,7 +153,7 @@ function QBCore.Functions.GetPlayerByCharInfo(property, value)
     for src in pairs(QBCore.Players) do
         local charinfo = QBCore.Players[src].PlayerData.charinfo
         if charinfo[property] ~= nil and charinfo[property] == value then
-            return QBCore.Players[src]
+            return QBCore.Functions.BuildPlayerProxy(QBCore.Players[src])
         end
     end
     return nil
@@ -626,8 +670,8 @@ end
 function QBCore.Functions.IsOptin(source)
     local license = QBCore.Functions.GetIdentifier(source, 'license')
     if not license or not QBCore.Functions.HasPermission(source, 'admin') then return false end
-    local Player = QBCore.Functions.GetPlayer(source)
-    return Player.PlayerData.optin
+    local player = QBCore.Players[source]
+    return player and player.PlayerData.optin
 end
 
 ---Toggle opt-in to admin messages
@@ -635,9 +679,9 @@ end
 function QBCore.Functions.ToggleOptin(source)
     local license = QBCore.Functions.GetIdentifier(source, 'license')
     if not license or not QBCore.Functions.HasPermission(source, 'admin') then return end
-    local Player = QBCore.Functions.GetPlayer(source)
-    Player.PlayerData.optin = not Player.PlayerData.optin
-    Player.Functions.SetPlayerData('optin', Player.PlayerData.optin)
+    local player = QBCore.Players[source]
+    if not player then return end
+    player:SetPlayerData('optin', not player.PlayerData.optin)
 end
 
 ---Check if player is banned
