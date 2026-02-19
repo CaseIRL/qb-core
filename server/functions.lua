@@ -460,16 +460,16 @@ function PaycheckInterval()
                     if account < payment then
                         TriggerClientEvent('QBCore:Notify', Player.PlayerData.source, Lang:t('error.company_too_poor'), 'error')
                     else
-                        Player.Functions.AddMoney('bank', payment, 'paycheck')
+                        Player:AddMoney('bank', payment, 'paycheck')
                         exports['qb-banking']:RemoveMoney(Player.PlayerData.job.name, payment, 'Employee Paycheck')
                         TriggerClientEvent('QBCore:Notify', Player.PlayerData.source, Lang:t('info.received_paycheck', { value = payment }))
                     end
                 else
-                    Player.Functions.AddMoney('bank', payment, 'paycheck')
+                    Player:AddMoney('bank', payment, 'paycheck')
                     TriggerClientEvent('QBCore:Notify', Player.PlayerData.source, Lang:t('info.received_paycheck', { value = payment }))
                 end
             else
-                Player.Functions.AddMoney('bank', payment, 'paycheck')
+                Player:AddMoney('bank', payment, 'paycheck')
                 TriggerClientEvent('QBCore:Notify', Player.PlayerData.source, Lang:t('info.received_paycheck', { value = payment }))
             end
         end
