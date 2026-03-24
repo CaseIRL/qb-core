@@ -40,7 +40,7 @@ function QBCore.Functions.BuildPlayerProxy(player)
     }
 
     for name, fn in pairs(player:GetAllExtraMethods()) do
-        functions[name] = function(...) return fn(player, ...) end
+        functions[name] = function(...) return fn(...) end
     end
 
     for name, value in pairs(player:GetAllExtraFields()) do

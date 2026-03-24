@@ -95,7 +95,7 @@ function QBPlayer:AddMoney(moneytype, amount, reason)
     if amount < 0 then return end
     local pd = Private[self].PlayerData
     if not pd.money[moneytype] then return false end
-    pd.money[moneytype] = pd.money[moneytype] + amount 
+    pd.money[moneytype] = pd.money[moneytype] + amount
 
     if not Private[self].Offline then
         self:UpdatePlayerData()
